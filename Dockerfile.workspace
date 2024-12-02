@@ -1,0 +1,35 @@
+FROM python:3.10
+
+ARG SPARK_VERSION=3.5.3
+ARG HADOOP_VERSION=3.3.1
+
+RUN apt update -y && apt install -y default-jdk wget tar && \
+    apt clean && rm -rf /var/lib/apt/lists/*
+
+# Download and install Spark
+RUN wget https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz && \
+    tar xvf spark-${SPARK_VERSION}-bin-hadoop3.tgz && \
+    mv spark-${SPARK_VERSION}-bin-hadoop3 /opt/spark && \
+    rm spark-${SPARK_VERSION}-bin-hadoop3.tgz
+
+# Download and install Hadoop
+RUN wget https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz && \
+    tar -xvf hadoop-${HADOOP_VERSION}.tar.gz && \
+    mv hadoop-${HADOOP_VERSION} /opt/hadoop && \
+    rm hadoop-${HADOOP_VERSION}.tar.gz
+
+# Set environment variables for Spark
+ENV SPARK_HOME=/opt/spark
+ENV PATH="$SPARK_HOME/bin:$PATH"
+
+# Set environment variables for Hadoop
+ENV HADOOP_HOME=/opt/hadoop
+ENV PATH="$HADOOP_HOME/bin:$PATH"
+
+ENV LD_LIBRARY_PATH=/opt/hadoop/lib/native
+
+WORKDIR /workspace
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
